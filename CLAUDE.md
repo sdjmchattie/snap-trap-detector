@@ -9,6 +9,12 @@
   - Outputs analog audio signal (centred ~VCC/2)
   - Gain adjustable via onboard trimmer
   - Output connected to an ESP32-C3 ADC pin
+- **Power**: 4× AA cells (~6V) → MCP1700-3302E LDO → 3.3V rail
+  - MCP1700: ~1.6µA quiescent current — ideal for battery-powered sleep applications
+  - Usable battery range ~3.6–6.0V (MCP1700 max input 6V, dropout ~178mV)
+  - Battery voltage monitored via resistor divider into ADC
+  - Divider must scale max battery voltage (6.4V) down to ≤3.3V
+    - e.g. 100kΩ / 68kΩ divider → 6.4V × (68/168) ≈ 2.59V ✓
 
 ## Project logic
 
@@ -31,9 +37,9 @@ The wakeup GPIO must be an RTC-capable GPIO. On the C3, GPIOs 0–5 support deep
 
 ## MQTT
 
-- Topic TBD — likely something like `home/traps/<location>/triggered`
-- Payload: JSON with timestamp and confidence/reason
-- Broker credentials stored in a `secrets.h` (gitignored)
+- Trap topic: `home/traps/<location>/triggered` — JSON with timestamp and detection metadata
+- Battery topic: `home/traps/<location>/battery` — published on each wake, JSON with voltage (V) and percentage
+- Broker credentials stored in `secrets.h` (gitignored)
 
 ## Build
 
