@@ -17,7 +17,7 @@ Battery-powered ESP32-C3 SuperMini that listens for mouse trap snaps via a micro
 | ----------- | ----------------------------------------------------------------- |
 | 3V3         | Power input from LDO regulator                                    |
 | GND         | Ground rail                                                       |
-| GPIO2       | Wake pin — comparator output (wake on LOW)                        |
+| GPIO0       | Wake pin — comparator output (wake on LOW)                        |
 | GPIO3 (A3)  | ADC — raw mic output (software noise analysis after wake)         |
 | GPIO8       | Built-in LED (status indication)                                  |
 | GPIOx (TBD) | ADC — battery voltage divider output                              |
@@ -48,7 +48,7 @@ Battery-powered ESP32-C3 SuperMini that listens for mouse trap snaps via a micro
 - Non-inverting input (+, pin 3): AC-coupled mic signal, DC-biased to 1.65V via R1/R2 (100kΩ/100kΩ from 3.3V)
 - Inverting input (−, pin 2): Fixed threshold ~1.96V via R9/R10 (68kΩ/100kΩ from 3.3V)
 - Output (pin 1): Open-collector, pulled HIGH by R3 (10kΩ to 3.3V). Goes LOW when sound exceeds threshold.
-- Output → GPIO2 (ESP32 wakes on LOW)
+- Output → GPIO0 (ESP32 wakes on LOW)
 
 ## Firmware Behaviour
 
@@ -60,7 +60,7 @@ Battery-powered ESP32-C3 SuperMini that listens for mouse trap snaps via a micro
 ### Production Mode
 
 1. Deep sleep with two simultaneous wake sources:
-   - GPIO2 LOW (comparator trigger)
+   - GPIO0 LOW (comparator trigger)
    - RTC timer (configurable heartbeat interval, default 24 hours)
 
 2. On wake, check `esp_sleep_get_wakeup_cause()`:
@@ -79,14 +79,14 @@ Battery-powered ESP32-C3 SuperMini that listens for mouse trap snaps via a micro
 
 **Timer wake (daily heartbeat):**
 
-- Attach falling-edge interrupt on GPIO2 that sets a `snap_detected` flag
+- Attach falling-edge interrupt on GPIO0 that sets a `snap_detected` flag
 - Connect to WiFi
 - Publish heartbeat MQTT message (include battery %)
 - Check retained MQTT config message
 - If OTA URL found: download and flash firmware
 - If threshold config found: update NVS, clear retained MQTT message
 - Disconnect WiFi
-- Detach GPIO2 interrupt
+- Detach GPIO0 interrupt
 - If `snap_detected` flag is set: run full trap-detection flow (ADC noise sampling → MQTT alert if confirmed)
 - Return to deep sleep
 
